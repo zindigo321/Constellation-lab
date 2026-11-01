@@ -1,0 +1,363 @@
+{
+  "round": 24,
+  "status": "PASS",
+  "exit_code": 0,
+  "scope": "Conditional fixed-B0, fixed-S limited third-replacement union",
+  "declared_candidates": 166970,
+  "partitions": {
+    "T100": 166675,
+    "T90": 239,
+    "FULL": 56
+  },
+  "all_candidates_independently_verified": true,
+  "unprocessed": 0,
+  "unknown": 0,
+  "candidate_REUSED": 0,
+  "qualified_for_round24": 2,
+  "original_constraint_reference_identity": "c1fbd71e9dfca4e0a7d0d603d496fff8a71e2bc406d12eee113ab2bc4207b71d",
+  "search_center_identity": "fa31ae444cd7afcf008b9d8d4d10a8ce6a8b8533c4d8f68c27bcf0003106d372",
+  "improvement_reference_identity": "fa31ae444cd7afcf008b9d8d4d10a8ce6a8b8533c4d8f68c27bcf0003106d372",
+  "selected_identity": "5e7b2b28cd8d1e2254b5968ad24db2bcc8e7dd61121b01468da6ea530a464a69",
+  "selected_indices": [
+    38,
+    70,
+    135,
+    196,
+    220,
+    222,
+    263,
+    279,
+    358,
+    478,
+    514,
+    548,
+    777,
+    911,
+    946,
+    974,
+    1118,
+    1222,
+    1370,
+    1419,
+    1931,
+    1941,
+    1949,
+    1995,
+    1997,
+    2023,
+    2049,
+    2092
+  ],
+  "relative_to_S": {
+    "removed": [
+      676,
+      1412,
+      2021
+    ],
+    "added": [
+      196,
+      1118,
+      1997
+    ]
+  },
+  "relative_to_B0": {
+    "removed": [
+      676,
+      1217,
+      1284,
+      1412
+    ],
+    "added": [
+      196,
+      1118,
+      1997,
+      2023
+    ]
+  },
+  "selected_metrics": {
+    "mask": {
+      "points": 43070,
+      "covered": 43070,
+      "uncovered": 0,
+      "coverage_end_fraction": 1.0,
+      "threshold_90_count": 38763,
+      "T90_s": 281750.47161919123,
+      "T100_s": 595089.2108747589,
+      "reached_90": true,
+      "reached_100": true,
+      "status": "AVAILABLE"
+    },
+    "raw": {
+      "points": 43424,
+      "covered": 43070,
+      "uncovered": 354,
+      "coverage_end_fraction": 0.9918478260869565,
+      "threshold_90_count": 39082,
+      "T90_s": 288686.03926296614,
+      "T100_s": null,
+      "reached_90": true,
+      "reached_100": false,
+      "status": "AVAILABLE"
+    },
+    "pooled_internal": {
+      "gap_count": 170,
+      "mean_s": 9360.61944171291,
+      "max_s": 130560.50163224502,
+      "longest_endpoints_s": [
+        242031.721879453,
+        372592.223511698
+      ]
+    },
+    "pooled_boundary_inclusive": {
+      "gap_count": 176,
+      "mean_s": 10250.645438812402,
+      "max_s": 136700.71607742802,
+      "longest_endpoints_s": [
+        468099.283922572,
+        604800.0
+      ]
+    }
+  },
+  "B0_metrics": {
+    "mask": {
+      "points": 43070,
+      "covered": 43070,
+      "uncovered": 0,
+      "coverage_end_fraction": 1.0,
+      "threshold_90_count": 38763,
+      "T90_s": 283728.33914436615,
+      "T100_s": 595089.2108747589,
+      "reached_90": true,
+      "reached_100": true,
+      "status": "AVAILABLE"
+    },
+    "raw": {
+      "points": 43424,
+      "covered": 43070,
+      "uncovered": 354,
+      "coverage_end_fraction": 0.9918478260869565,
+      "threshold_90_count": 39082,
+      "T90_s": 290895.44183683814,
+      "T100_s": null,
+      "reached_90": true,
+      "reached_100": false,
+      "status": "AVAILABLE"
+    },
+    "pooled_internal": {
+      "gap_count": 172,
+      "mean_s": 9413.983168107334,
+      "max_s": 172730.31608610202,
+      "longest_endpoints_s": [
+        69292.439694662,
+        242022.755780764
+      ]
+    },
+    "pooled_boundary_inclusive": {
+      "gap_count": 178,
+      "mean_s": 10135.414639655666,
+      "max_s": 172730.31608610202,
+      "longest_endpoints_s": [
+        69292.439694662,
+        242022.755780764
+      ]
+    }
+  },
+  "S_metrics": {
+    "mask": {
+      "points": 43070,
+      "covered": 43070,
+      "uncovered": 0,
+      "coverage_end_fraction": 1.0,
+      "threshold_90_count": 38763,
+      "T90_s": 283626.3948020579,
+      "T100_s": 595089.2108747589,
+      "reached_90": true,
+      "reached_100": true,
+      "status": "AVAILABLE"
+    },
+    "raw": {
+      "points": 43424,
+      "covered": 43070,
+      "uncovered": 354,
+      "coverage_end_fraction": 0.9918478260869565,
+      "threshold_90_count": 39082,
+      "T90_s": 290661.63985764096,
+      "T100_s": null,
+      "reached_90": true,
+      "reached_100": false,
+      "status": "AVAILABLE"
+    },
+    "pooled_internal": {
+      "gap_count": 175,
+      "mean_s": 9251.526570870468,
+      "max_s": 132051.28738869302,
+      "longest_endpoints_s": [
+        242031.721879453,
+        374083.009268146
+      ]
+    },
+    "pooled_boundary_inclusive": {
+      "gap_count": 181,
+      "mean_s": 9966.385916279442,
+      "max_s": 136700.71607742802,
+      "longest_endpoints_s": [
+        468099.283922572,
+        604800.0
+      ]
+    }
+  },
+  "improvement_vs_S": {
+    "Tmax_reduction_s": 1490.7857564479928,
+    "minimum_required_s": 1.0,
+    "uncertainty_margin_s": 1e-06,
+    "substantive_improvement": true,
+    "conservative_lower_bound_s": 1490.7857554479926
+  },
+  "first_tail_by_target": {
+    "YangtzeRiverDelta": {
+      "first_s": 3260.222305165,
+      "tail_s": 4570.868130479008
+    },
+    "YangtzeRiverDelta_Island_1": {
+      "first_s": 28608.394606022,
+      "tail_s": 4642.345470258035
+    },
+    "YangtzeRiverDelta_Island_2": {
+      "first_s": 35025.745550436,
+      "tail_s": 136700.71607742802
+    }
+  },
+  "selected_orbits": {
+    "repository_path": "checkpoints/round24/selected_orbits.csv",
+    "bytes": 2404,
+    "sha256": "3d434ab103260c83be1cdcd7710ed212478239ba00b69a87d04d4e31cfb60221"
+  },
+  "source": {
+    "consumed_files": 434,
+    "unchanged_prior_files": 400,
+    "new_R24_files": 34,
+    "preserved_checkpoint_inputs": 6,
+    "consumer_identity": "84125b35327b53579899c0f91a8edf59cf082bae1c103197e091ba167a8e7474",
+    "source_zip_sha256": "3165e17c1ca6f2d0d74846852e3bff48fb6f4bbe3fe5a5866f801d9917c9ea4e",
+    "contract_sha256": "148c6ac798e0afefca3c7f35c687440be8ab406213025f5ec042ce71b031178a"
+  },
+  "tests": {
+    "new": 73,
+    "historical": 788,
+    "total": 861,
+    "historical_binding_counterexamples": 26,
+    "independent_new_test_rerun": "PASS",
+    "historical_records_and_source_mappings": "PASS"
+  },
+  "independent_review": {
+    "science": {
+      "status": "PASS",
+      "record_sha256": "077392c47022d1f16a2d0a8bd78cc2cc5de2cd65baa12b6d85c97756070a6d91"
+    },
+    "engineering": {
+      "status": "PASS",
+      "record_sha256": "b4e295e4d156ee43ec7af3ef23c1f35659cfaf02e596b392875375569572694f"
+    },
+    "package": {
+      "status": "PASS",
+      "record_sha256": "b83bb54bd22281c078cb79c94fb3072d960ec0940577074f88c94e28804894f2"
+    }
+  },
+  "manifests": {
+    "sealed": {
+      "members": 3798,
+      "bytes": 1191485628,
+      "manifest_sha256": "a9fb426305d174b78a5991dc9567865a3de5e2c05ab7d281c431f7da6ff12492",
+      "status": "PASS"
+    },
+    "transport": {
+      "members": 3806,
+      "bytes": 1192208882,
+      "manifest_sha256": "ab2815257a6ba9dfde546853ed9fffb4c22ced91e895223c453a6d8f19b75d99",
+      "status": "PASS"
+    },
+    "delivery": {
+      "members": 3816,
+      "bytes": 1193277229,
+      "manifest_sha256": "54df4a255b0409e4c5767ea0f41ac08cd5699778c60cc967a4deaceedadd9b9c",
+      "status": "PASS"
+    }
+  },
+  "actual_outer_exits": {
+    "research": {
+      "python_exit_code": 0,
+      "actual_shell_exit_code": 0,
+      "launch_status": "STARTED"
+    },
+    "export": {
+      "python_exit_code": 0,
+      "actual_shell_exit_code": 0,
+      "launch_status": "STARTED"
+    },
+    "finalizer": {
+      "python_exit_code": 0,
+      "actual_shell_exit_code": 0,
+      "launch_status": "STARTED"
+    }
+  },
+  "direct_export_child_shell_exit": null,
+  "timing": {
+    "receipt_creation_elapsed_s": 4673.330897808075,
+    "finalizer_readback_elapsed_s": 4737.280683040619,
+    "finalizer_actual_outer_exit_observed_elapsed_s": 4764.443144798279,
+    "lifecycle_elapsed_s": 4835.302668809891,
+    "budget_compliance": true,
+    "actual_overrun_s": 0
+  },
+  "original_local_delivery": "G:\\gpt-file\\Codex\\outputs\\bd-fmb\\round24\\20261101T121155_offline",
+  "outer_final_observation": {
+    "path": "G:\\fmb666\\work\\round24\\20261101T121155_offline\\observations\\after_all_exits_full_readback.json",
+    "bytes": 2623,
+    "sha256": "a06c29b39f88bddc557bcd243c729eef9fc7acc2cfd99476dc6ee5178a64689c"
+  },
+  "external_Chinese_execution_summary": {
+    "path": "G:\\fmb666\\work\\round24\\20261101T121155_offline\\observations\\round24_execution_summary_zh.md",
+    "bytes": 13878,
+    "sha256": "8c54e00c57495367a3f4b79b75bea6d85a5d5e0b2d83011f40e13967115dab7f"
+  },
+  "disclosure": {
+    "initial_clock_sampling_limitation": "First attachment read preceded precise paired sampling. A conservative earlier UTC bound was retained, never reset; the later paired QPC sample is offset by full UTC preparation elapsed.",
+    "sealed_report_title_typo": "Immutable report says round23 in its title; ROUND24 config, contract and execution are authoritative",
+    "Tavg_increase_vs_S_s": 109.0928708424417,
+    "first_wait_increase_main_s": 1285.5449226079998,
+    "first_wait_increase_Island1_s": 26624.046272933,
+    "failed_attempts_and_first_version_preserved": true
+  },
+  "limitations": {
+    "active_protocol_change_authorized": false,
+    "official_readiness": "UNRESOLVED",
+    "official_score": null,
+    "next_scientific_run_gate": "BLOCKED_PENDING_RULE_CONFIRMATION",
+    "new_native_validation_performed": false,
+    "whole_constellation_STK_verified": false,
+    "source": "archived_component_composition",
+    "mixed_saved_altitudes_conditional": true,
+    "EOP_last_year": 2019,
+    "scenario_year": 2027,
+    "original_domain_uncovered": 354,
+    "full_local_inputs_not_in_Git": true,
+    "parent_HEAD_line_endings_normalized": {
+      "older_consumers": 41,
+      "older_checkpoint_evidence_files": 2,
+      "differences": "CRLF/LF only; no content changes",
+      "old_blobs_not_rewritten": true,
+      "exact_historical_raw_bytes_require_original_source_snapshot": true
+    }
+  },
+  "cumulative_source_rounds": [
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "R23_historical_status": "BLOCKED/2; zero candidates processed",
+  "experiment_native_activations": 0,
+  "experiment_git_write_operations": 0,
+  "checkpoint_parent_commit": "cca545d49d259f8a492b835e154b337b51140684"
+}
