@@ -1,0 +1,38 @@
+{
+  "algorithm_version": "R25-balanced-1.1.0",
+  "plane_rule": "P=min(N,max(2,nearest_integer(sqrt(2*N)))); ties round up",
+  "allocation_rule": "q,r=divmod(N,P); m[p]=q+1 for p<r, otherwise q; p=0..P-1",
+  "raan_rule": "Omega[p]=(360*p/P) mod 360; core accumulates equal 360/P increments",
+  "phase_rule": "u[p,s]=(360*s/m[p]+360*F*p/N) mod 360; p and s start at zero",
+  "phase_factor_rule": "If N is divisible by P, P is even and N/P is odd: F=0 when P=2, otherwise F=2; all other cases F=1",
+  "altitude_km": 600.0,
+  "raan0_deg": 0.0,
+  "phase0_deg": 0.0,
+  "eccentricity": 0.0,
+  "arg_perigee_deg": 0.0,
+  "epoch": "2027-01-01 00:00:00",
+  "stop": "2027-01-08 00:00:00",
+  "time_system": "UTCG",
+  "reference_frame": "J2000",
+  "propagator": "J2Perturbation",
+  "propagation_step_s": 30.0,
+  "sso_residual_tolerance_rad_s": 1e-15,
+  "units": {
+    "altitude_km": "km",
+    "inclination_deg": "deg",
+    "raan_deg": "deg",
+    "arg_lat_deg": "deg",
+    "plane_id": "zero-based integer"
+  },
+  "temporary_assumptions": [
+    "UTCG is provisional: the task specifies calendar times but no time system.",
+    "Constants reused from archived famou orbit.py; its STK 11.6 provenance claim is historical evidence, not a current native or official confirmation.",
+    "Mean Earth radius 6371.0 km defines altitude only; J2 reference radius is 6378.1363 km.",
+    "First-order secular J2 SSO relation with tropical year 365.2421897 days; mean/osculating initial-element alignment and long-term nodal drift require native verification.",
+    "Fixed 600 km, zero global RAAN/phase origin, nearest sqrt(2*N) planes and the explicit parity phase rule are deterministic engineering choices, not performance-optimal results.",
+    "The parity rule removes initial node coincidences found with F=1 for N=2,18,50,98. Initial position checks do not certify long-term collision safety.",
+    "Unequal populations use a custom balanced family with the stated phase rule, not a standard equal-population Walker claim.",
+    "No LTAN/LTDN constraint is supplied or inferred.",
+    "No payload or point grid is instantiated by this generator; official FOV interpretation, regions, Earth/EOP and interface formatting remain external confirmation items."
+  ]
+}
