@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "scope": "Portable R25 generator and three-file R28 offline core; native STK runner and evidence are not included",
+  "r28_parent_runtime_version": "r28_v01",
+  "r28_parent_runtime_aggregate_sha256": "f1e4742ab96dc9fba32b91ba6ee691ea6c5f4ed3a8bac14eb4853cb00ee389ed",
+  "r28_published_runtime_file_count": 3,
+  "r28_parent_runtime_file_count": 10,
+  "original_results_are_local_evidence": true,
+  "files": [
+    {
+      "path": "research/round25/program/generate.py",
+      "bytes": 7881,
+      "sha256": "755e4104dc2632bd2578f4248ef214d52eb5900ea4aa2eea782870a89728bca5",
+      "origin": "R25 sealed program/generate.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round25/program/policy.json",
+      "bytes": 2242,
+      "sha256": "14e804be6fa6821f9bd4965de309ce86b261e183f77e3ce4f2eca18d69f1d6e9",
+      "origin": "R25 sealed program/policy.json",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round25/program/core/__init__.py",
+      "bytes": 77,
+      "sha256": "d18edbc015f4d6165daad3fd1649162c54f2d0771628898c45b892e8bb6cff97",
+      "origin": "R25 sealed program/core/__init__.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round25/program/core/constellation.py",
+      "bytes": 2346,
+      "sha256": "695186c2dd4c2e9132c1119bd791f089f78b948e3da85975fc3805840fa5a4dc",
+      "origin": "R25 sealed program/core/constellation.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round25/program/core/orbit.py",
+      "bytes": 1450,
+      "sha256": "40446941d076506f1aafae32d8330b585aaf1ff1b6c73a6cd7eba0f561731422",
+      "origin": "R25 sealed program/core/orbit.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round25/program/core/schema.py",
+      "bytes": 2236,
+      "sha256": "7fa668e84efefad28fa6c3af90c855d4890792485108e4471922c08a8fda23a3",
+      "origin": "R25 sealed program/core/schema.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round25/program/core/io.py",
+      "bytes": 479,
+      "sha256": "eebffb2ec0bb5e48be27ee5d9bafbf39ff77420a63120b7cc09e5f63a5dd9582",
+      "origin": "R25 sealed program/core/io.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round28/src/incremental_store.py",
+      "bytes": 22822,
+      "sha256": "e3b87b557b9f9577c2afd4707a4796e2ba351f7fd81104f076f1c66a94aa72ff",
+      "origin": "R28 sources/r28_v01/incremental_store.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round28/src/stats_production.py",
+      "bytes": 20940,
+      "sha256": "68ccaec8ffd4c3da17374ac1259da24934ab0d90353009cac1a3969bbc6caa33",
+      "origin": "R28 sources/r28_v01/stats_production.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round28/src/stats_independent.py",
+      "bytes": 22294,
+      "sha256": "045241353c318e406ef59f6d12894b36a7600fd5a26fbf2a2b90d18f886070e3",
+      "origin": "R28 sources/r28_v01/stats_independent.py",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round28/checks/store_counterexamples.py",
+      "bytes": 9582,
+      "sha256": "f2523d36b50b1aa8416c3b606b013ab28b0d6492d03ac59e1fde9baf83ee69e7",
+      "origin": "R28 checks/store_counterexamples.py (synthetic only)",
+      "byte_identical": true
+    },
+    {
+      "path": "research/round28/checks/synthetic_smoke.py",
+      "bytes": 12271,
+      "sha256": "8259321e8b6089ed4da7811cbe0275d8713a2eaa75345fe5d7d9540e29a3ccc5",
+      "origin": "New publication-only synthetic test; no native evidence",
+      "byte_identical": true
+    }
+  ]
+}

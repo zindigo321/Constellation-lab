@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "scope": "Public portable source subset and aggregate facts; not a full native reproduction bundle",
+  "R25": {
+    "generator_version": "R25-balanced-1.1.0",
+    "n_range": [
+      2,
+      100
+    ],
+    "interface": "PASS",
+    "parameters": "PASS",
+    "independent_directory": "PASS",
+    "performance": "UNVALIDATED"
+  },
+  "R26": {
+    "status": "R26_DIAGNOSTIC_PILOT_PASS",
+    "satellites": 1,
+    "window_s": 7200,
+    "ordinary_points": 64,
+    "calibration_points": 5
+  },
+  "R27": {
+    "status": "R27_MULTI_SATELLITE_DIAGNOSTIC_PASS",
+    "satellites": 4,
+    "window_s": 21600,
+    "ordinary_points": 512,
+    "calibration_points": 8
+  },
+  "R28": {
+    "status": "R28_BATCHED_PIPELINE_DIAGNOSTIC_PASS",
+    "runtime_version": "r28_v01",
+    "runtime_aggregate_sha256": "f1e4742ab96dc9fba32b91ba6ee691ea6c5f4ed3a8bac14eb4853cb00ee389ed",
+    "main_manifest_sha256": "cd363c8c2e144b596ee7711f62c646a4003faa722ed17b6b1ab823f6e3df2a31",
+    "ordinary_points": 512,
+    "calibration_points": 8,
+    "satellites": 4,
+    "duration_s": 21600,
+    "queries": 2080,
+    "ordinary_events": 8,
+    "ordinary_internal_gap_count": 0,
+    "calibration_events": 10,
+    "cross_satellite_calibration_points": 2,
+    "internal_gaps_per_cross_satellite_calibration_point": 2,
+    "events_starting_after_7200_s": 11,
+    "old_D_store_files": 6242,
+    "new_D_store_files": 101,
+    "file_count_reduction_ratio": 61.801980198019805,
+    "overall_speedup_claimed": false,
+    "offline_8192_completed": true,
+    "offline_8192_store_files": 386,
+    "timing": {
+      "strict_first_tool_sampling_satisfied": false,
+      "unmeasured_prelude_allowance_s": 120,
+      "allowance_is_proven_upper_bound": false,
+      "recorded_origin_elapsed_to_caller_s": 4906.778324700004
+    },
+    "new_stage_first_COM_failure_preserved": true
+  },
+  "formal_full_grid_validation": "NOT_RUN",
+  "full_N28_admission": "CLOSED",
+  "official_readiness": "UNRESOLVED",
+  "official_score": null,
+  "native_runtime_and_full_evidence_in_this_commit": false
+}
