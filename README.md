@@ -1,239 +1,279 @@
-# 星衡 ConstellationLab：遥感星座构型优化与覆盖重访验证：面向全球覆盖与区域重访的星座构型优化设计
+# ConstellationLab: Satellite Constellation Optimization for Global Coverage and Regional Revisit
 
-本项目对应洞一科技“面向全球覆盖与区域重访的星座构型优化设计”赛题。计划使用 **Python 生成和优化星座，STK 11 建立工程模型并验证覆盖与重访性能**，形成“输入卫星总数 → 生成轨道参数 → 仿真评估 → 迭代优化 → 导出结果”的流程。
+This project addresses a satellite constellation design challenge from Dongyi Technology: improving global coverage and regional revisit performance. It uses **Python to generate and optimize constellations and STK 11 to build simulation models and validate their performance**. The intended workflow is:
 
-**当前状态（R25—R28阶段发布）：** 已提供支持整数N=2..100的独立构型生成器，并完成R28批次管线的限定同机原生诊断验收。公开快照包含生成器、批次/统计离线核心与合成检查；完整N28正式全网格及最终参赛提交仍未就绪，官方分数为null。
+```text
+Satellite count -> Orbital parameters -> Simulation and evaluation -> Optimization -> Export
+```
 
-使用 [R25新入口](research/round25/README.md)、[R28离线核心](research/round28/README.md)，验证范围及计时限制见 [阶段状态说明](docs/r25-r28-status.md)。下文保留早期设计与接口计划；旧的 `src.cli` 不代表本次通用N新入口。
+**Current status: R25-R28 research release.** A standalone generator supports integer satellite counts from 2 to 100. The R28 batch pipeline has passed diagnostic acceptance within a limited native STK workload on the same machine. This public release contains the generator, offline batch storage and statistics modules, and synthetic checks. Full 28-satellite validation on the official grids and the final competition submission are still pending. `official_score=null`.
 
-## 1. 项目目标与交付范围
+Start with the [R25 generator](research/round25/README.md) and [R28 offline modules](research/round28/README.md). The [stage status document](docs/r25-r28-status.md) records validation scope and timing limitations. Those linked historical documents retain their original language. The sections below preserve the original project plan; planned interfaces and targets should not be read as completed capabilities. The legacy `src.cli` is not the new general-purpose N-only entry point.
 
-- 接收整数卫星总数 `N`，支持题目规定的 `1 < N ≤ 100`，自动生成恰好 `N` 颗卫星的合法构型。
-- 在固定卫星数量下，同时改善全球覆盖效率与长三角地区重访性能。
-- 在统一历元、J2000 坐标系下，输出每颗卫星的高度 `h`、倾角 `i`、升交点赤经 `Ω`、纬度幅角 `u`。
-- 提交算法与源代码、运行说明，以及 **28 星完整 STK 工程和全球覆盖、区域重访分析结果**。
-- 以 Walker 构型建立基线，再研究轨道面、相位和高度的优化；用相同条件的仿真结果判断是否改进。
+### Run the published standalone tools
 
-题目背景提到减少卫星数量，但本项目的直接输入是给定的 `N`，第一阶段优化固定 `N` 下的性能，不额外开展卫星数量最小化。暂不扩展到姿态控制器、能源调度、数传或完整碰撞规避系统。
+From the repository root, using Python 3.11, the environment used for acceptance:
 
-## 2. 统一设计与仿真条件
+```powershell
+# Generate a 28-satellite constellation without starting STK.
+python -B research/round25/program/generate.py 28 --out work/generated/N28
 
-| 项目 | 题目规定 / 本项目处理 |
+# Run the published synthetic storage and integration checks without STK.
+python -B research/round28/checks/store_counterexamples.py work/r28-store-checks
+python -B research/round28/checks/synthetic_smoke.py --out work/r28-synthetic-checks
+```
+
+Each output directory must be new. The generator writes `orbits.csv`, `config.json`, and `COMPLETE.json`. Successful parameter generation requires exit code 0 and valid completion bindings. It does not establish coverage or revisit performance. The synthetic checks use fixture data and do not reproduce the native STK experiments.
+
+## 1. Objectives and Deliverables
+
+- Accept an integer satellite count `N`, where `1 < N <= 100`, and generate exactly `N` satellites with valid orbital parameters.
+- Improve global coverage efficiency and revisit performance over the Yangtze River Delta for a fixed satellite count.
+- Export altitude `h`, inclination `i`, right ascension of the ascending node `RAAN`, and argument of latitude `u` for each satellite at a common epoch in J2000.
+- Deliver the algorithm, source code, operating instructions, and **a complete 28-satellite STK project with global coverage and regional revisit analysis**.
+- Establish a Walker baseline, then investigate orbital plane, phase, and altitude changes under identical evaluation conditions.
+
+Although the challenge background mentions reducing satellite count, the direct input is a specified `N`. The initial scope optimizes performance at fixed `N`; satellite count minimization is a separate problem. Attitude controller design, energy scheduling, communications scheduling, and comprehensive collision avoidance are outside the current scope.
+
+## 2. Design and Simulation Conditions
+
+| Item | Challenge specification / project interpretation |
 | --- | --- |
-| 卫星与轨道 | 光学遥感卫星，太阳同步圆轨道，`e = 0` |
-| 轨道高度 | 500–700 km，按平均地球半径定义高度 |
-| 传播模型 | J2；在 STK 11 中采用 J2 Perturbation |
-| 传播器步长 | 30 s |
-| 初始参考系 | J2000 |
-| 仿真区间 | 2027-01-01 00:00:00 至 2027-01-08 00:00:00，共 7 天；时间系统待确认 |
-| 载荷 | 线阵推扫光学相机 |
-| 载荷幅宽 | 文档表达为 `15 × h / 530 km`；拟按 `W(km) = 15 × h(km) / 530` 理解，待确认 |
-| 默认姿态 | 本体 +Z 指向地心，+X 沿运动前进方向，+Y 构成右手系 |
-| 沿迹 / 交叉迹视场 | 0.001622° / 0.81°，全角或半角口径待确认 |
-| 全球覆盖网格 | 1° × 1°；使用主办方规定的有效评价区域 |
-| 长三角重访网格 | 0.1° × 0.1°；区域边界待取得正式定义 |
-| 覆盖分析时间设置 | 全球推荐 10 s，长三角 1 s；与传播器 30 s 步长分别配置 |
-| 成像约束 | 理想连续几何成像，不考虑能源、热控、存储、数传和天气约束 |
+| Satellites and orbits | Optical remote sensing satellites in circular sun-synchronous orbits, `e = 0` |
+| Altitude | 500-700 km, defined relative to the mean Earth radius |
+| Propagation | J2; J2 Perturbation in STK 11 |
+| Propagation step | 30 s |
+| Initial reference frame | J2000 |
+| Simulation period | January 1, 2027, 00:00:00 to January 8, 2027, 00:00:00; seven days; time system pending confirmation |
+| Payload | Linear pushbroom optical camera |
+| Swath width | Specified as `15 * h / 530 km`; provisionally interpreted as `W(km) = 15 * h(km) / 530`, pending confirmation |
+| Default attitude | Body +Z toward Earth's center, +X along the direction of motion, and +Y completing a right-handed frame |
+| Along-track / cross-track field of view | 0.001622 degrees / 0.81 degrees; full-angle versus half-angle convention pending confirmation |
+| Global coverage grid | 1 degree by 1 degree over the organizer's valid evaluation domain |
+| Yangtze River Delta revisit grid | 0.1 degree by 0.1 degree; official boundary pending |
+| Coverage analysis time settings | Recommended 10 s globally and 1 s regionally; configured separately from the 30 s propagation step |
+| Imaging constraints | Ideal continuous geometric imaging, without energy, thermal, storage, communications, or weather constraints |
 
-不自行增加光照、太阳高度角等筛选条件；如主办方另有规定，再统一更新。搜索阶段可采用较粗网格降低成本，但最终结果必须在统一条件下复算。
+Do not add illumination, solar elevation, or other filters without a corresponding organizer requirement. Coarser grids may be used during search, but final results must be recomputed under the common evaluation conditions.
 
-### 开始正式比较前需要确认
+### Items to confirm before formal comparison
 
-1. **时间系统和地球模型常数。** 草案可先使用 UTCG，但必须将其记录为临时假设；确认主办方历元口径、平均地球半径与 J2 模型参数后统一替换。
-2. **视场与幅宽。** STK 11 矩形传感器的角度属性使用半角。按平面近似，530 km 高度下若交叉迹半角为 0.81°，幅宽约为 `2h tan(0.81°) ≈ 15 km`，与文档幅宽相符；这只是推断，不能代替确认。沿迹和交叉迹方向也需通过地面投影核对，不能直接按界面 Horizontal / Vertical 名称照填。
-3. **长三角边界和全球有效点集。** 取得正式多边形或点集；临时区域只用于调试。所有方案共用固定评价点，不能按某个方案实际覆盖到的点重新定义分母，也不能简单删掉未覆盖点。
-4. **接口和评分细则。** 确认正式输入输出格式、最终测试 `N`、重访区间首尾边界及无效点处理。文档给出的 `30 / 60 / 100` 是示例测试工况，28 星是另行要求提交的工程规模。
+1. **Time system and Earth constants.** UTCG may be used provisionally if recorded as an assumption. Confirm the official epoch convention, mean Earth radius, and J2 parameters before formal evaluation.
+2. **Field of view and swath width.** STK 11 rectangular sensor angle properties use half-angles. A planar approximation with a cross-track half-angle of 0.81 degrees at 530 km gives `2h * tan(0.81 degrees)`, approximately 15 km. This supports an interpretation but does not replace official confirmation. Verify along-track and cross-track directions through ground projection rather than relying on Horizontal / Vertical property names alone.
+3. **Regional boundary and valid global points.** Obtain the official polygon or point set. Temporary regions are for debugging. All candidates must use the same fixed evaluation points; do not change the denominator based on a candidate's actual coverage or remove uncovered points.
+4. **Interfaces and scoring.** Confirm the official input/output format, evaluated satellite counts, treatment of interval boundaries, and invalid-point rules. Counts of 30, 60, and 100 are example test cases; the 28-satellite engineering deliverable is a separate requirement.
 
-## 3. 评价指标与优化目标
+## 3. Metrics and Optimization Objectives
 
-| 指标 | 含义 | 方向 | 分值 |
+| Metric | Definition | Direction | Score weight |
 | --- | --- | --- | --- |
-| `T90` | 全球有效网格累计覆盖率首次达到 90% 的时间 | 越小越好 | 28 |
-| `T100` | 全球有效网格全部至少覆盖一次的时间 | 越小越好 | 12 |
-| `Tavg` | 长三角全部有效重访间隔的平均值 | 越小越好 | 42 |
-| `Tmax` | 长三角全部有效重访间隔的最大值 | 越小越好 | 18 |
+| `T90` | First time cumulative coverage reaches 90% of valid global grid points | Minimize | 28 |
+| `T100` | First time every valid global grid point has been covered at least once | Minimize | 12 |
+| `Tavg` | Mean of all valid revisit gaps over the Yangtze River Delta | Minimize | 42 |
+| `Tmax` | Maximum valid revisit gap over the Yangtze River Delta | Minimize | 18 |
 
-全球累计覆盖率按“已至少覆盖一次的有效网格数量 / 全部有效网格数量”计算，重复观测不重复计数。按题目点数口径统计，不擅自改为面积加权。
+Cumulative global coverage is the number of valid points observed at least once divided by the total number of valid points. Repeated observations do not increase the count. Use the specified point-count convention rather than substituting area weighting.
 
-重访统计先对**每个网格点**合并所有卫星产生的重叠、相接访问区间，再计算相邻访问之间的空窗：`ΔT = 下一次访问开始时间 - 上一次访问结束时间`。将全部网格的有效间隔汇总后求平均与最大值；不直接平均各点平均值，也不默认 STK 内置重访报表与题目统计口径完全一致。
-
-文档给出的单工况评分可写为：
+For **each grid point**, merge overlapping or touching access intervals from all satellites, then calculate the gaps between consecutive merged intervals:
 
 ```text
-S_N = 28 × T90_best / T90 + 12 × T100_best / T100
-    + 42 × Tavg_best / Tavg + 18 × Tmax_best / Tmax
+gap = start of next access - end of previous access
 ```
 
-`*_best` 是同一卫星数量工况下全部有效参赛方案中的最优指标，开发时无法预知。内部优化先记录四项原始指标，并用固定基线做归一化比较；如采用加权损失，可按 `0.28 / 0.12 / 0.42 / 0.18` 分配权重，**内部目标值不称为官方得分**。如四项指标存在明显取舍，再保留 Pareto 候选集。
+Pool the valid gaps across all points before calculating the mean and maximum. Do not average per-point means directly, or assume that STK's built-in revisit reports implement the challenge's exact convention.
 
-异常情况必须单独记录：
+The documented score for one satellite-count case is:
 
-- 7 天内未达到 90%：全球覆盖两项计 0；达到 90% 但未达到 100%：仅 `T100` 项计 0。
-- 未达到的覆盖阈值保存为缺失值并标记未达标，不能用 7 天冒充达标时间。
-- 某些重点网格不足两次有效访问：按题目重访项可能直接判 0 的规则处理，不能将这些网格丢弃后计算出较好的平均值。
-- 卫星数量不符、参数非法、STK 无法传播或格式不符：对应工况无效。
-- 仿真起点到首次访问、最后访问到终点的空窗另行记录；是否纳入官方重访统计待确认。
+```text
+S_N = 28 * T90_best / T90 + 12 * T100_best / T100
+    + 42 * Tavg_best / Tavg + 18 * Tmax_best / Tmax
+```
 
-## 4. 软件方案
+Here, `*_best` denotes the best metric among valid competing submissions with the same satellite count. These values are unknown during development. Internal optimization records the four raw metrics and compares them against a fixed baseline. A weighted internal loss may use weights of `0.28 / 0.12 / 0.42 / 0.18`; **an internal objective value is not an official score**. Retain Pareto candidates where the metrics have meaningful tradeoffs.
 
-| 软件 / 工具 | 计划用途 | 使用安排 |
+Record exceptional cases explicitly:
+
+- If 90% coverage is not reached within seven days, both global coverage terms receive zero. If 90% is reached but 100% is not, only the `T100` term receives zero.
+- Store unreached thresholds as missing values with an explicit failure status. Do not report seven days as a measured threshold time.
+- If required regional points have fewer than two valid accesses, retain them and apply the challenge's applicable zero-score rule; do not discard them to improve the reported mean.
+- Incorrect satellite counts, invalid parameters, propagation failures, or invalid formats make the corresponding case invalid.
+- Record the gap from the simulation start to the first access and from the final access to the simulation end separately. Their inclusion in official revisit statistics remains pending confirmation.
+
+## 4. Software and Environment
+
+| Software / tool | Intended use | Environment policy |
 | --- | --- | --- |
-| Windows + STK 11 | J2 传播、载荷建模、访问与覆盖验证、工程输出 | 核心验证环境，记录具体 11.x 小版本 |
-| Python | 构型生成、优化、指标统计和结果导出 | 项目主语言，先确认团队已有版本 |
-| NumPy、SciPy | 数值计算、参数搜索和优化 | 优先满足基础算法需要 |
-| pandas、Matplotlib | 数据整理、覆盖曲线和对比图 | 分析与报告 |
-| comtypes 或 pywin32 | Python 与 STK 11 的 COM 自动化 | 首周比较后固定一种主方案 |
-| Git / GitHub Desktop | 本地版本管理和团队协作 | 团队成员自行提交与推送 |
+| Windows + STK 11 | J2 propagation, payload modeling, access and coverage validation, project export | Record the exact STK 11.x version |
+| Python | Constellation generation, optimization, statistics, and export | Main implementation language |
+| NumPy and SciPy | Numerical calculations, parameter search, and optimization | Add as required by the algorithms |
+| pandas and Matplotlib | Data preparation, coverage curves, and comparisons | Analysis and reporting |
+| comtypes or pywin32 | Python-to-STK COM automation | Select and record a tested bridge |
+| Git / GitHub Desktop | Version control and collaboration | Review changes before committing and pushing |
 
-优先保留团队现有可用 Python 环境；如需新建环境，可先尝试 Python 3.10，实际能否与所装 STK 11、小版本及 COM 桥接库配合，以首周连通测试为准，不预先声称已兼容。测试通过后锁定依赖版本并记录 Python/STK 位数和小版本。
+Prefer an existing working Python environment. The original setup plan suggested trying Python 3.10 if a new environment was needed; compatibility with the installed STK version and COM bridge must be tested rather than assumed. The published standalone R25/R28 subset was accepted on Windows with Python 3.11 and uses only the standard library. Lock dependencies after successful environment testing and record Python/STK versions and architecture.
 
-STK 11 自动化走 `STK11.Application`、`Personality2`、Object Model / Connect 路线，官方 STK 11 培训材料提供了 Python COM 示例。[STK 11.4.1 官方培训手册](https://help.agi.com/stk/11.4.1/LinkedDocuments/Printed%20Manual%20-%20Comprehensive.pdf)
+The planned STK 11 automation route uses `STK11.Application`, `Personality2`, and the Object Model / Connect interfaces. See the [STK 11.4.1 training manual](https://help.agi.com/stk/11.4.1/LinkedDocuments/Printed%20Manual%20-%20Comprehensive.pdf).
 
-第一周确认许可证是否支持所需的 Coverage Definition / Figure of Merit 和自动化能力。如缺少覆盖模块，先用少量地面点与传感器 Access 打通统计流程，再评估全网格运行成本和可用授权。构型生成模块应可独立运行，STK 作为评估与验证依赖，避免每次输出参数都必须启动 STK。
+Check whether the license supports Coverage Definition / Figure of Merit and the required automation features. If coverage modules are unavailable, start with sensor Access calculations for a small set of ground points, then assess full-grid cost and available licensing. Parameter generation must remain independently runnable without starting STK.
 
-## 5. 构型与优化路线
+## 5. Constellation Design and Optimization
 
-### 第一步：建立可复现基线
+### Step 1: Establish a reproducible baseline
 
-先建立 28 星、7 个轨道面、每面 4 星的均匀构型，保存完整的高度、太阳同步倾角、升交点赤经和星间相位。题目文档描述现有构型“4 天覆盖 90%、一周完成全覆盖”，但没有给出完整初始参数，**该描述是待复现参考，不能当作本项目实测结果**。
+The original baseline plan uses 28 satellites in seven orbital planes with four satellites per plane. Save altitude, sun-synchronous inclination, RAAN, and phase parameters. The challenge describes a reference constellation reaching 90% coverage in four days and full coverage within a week, but does not supply its complete initial parameters. **That description is a reference to reproduce, not a measured result from this project.**
 
-均匀 Walker-Delta 候选可使用以下参数化方式，角度统一按度计算：
+Uniform Walker-Delta candidates can use the following parameterization, with angles in degrees:
 
 ```text
-N = P × S
-Ω_p = Ω_0 + 360 × p / P
-u_(p,s) = u_0 + 360 × s / S + 360 × F × p / N
-p = 0, ..., P-1；s = 0, ..., S-1；F = 0, ..., P-1
+N = P * S
+RAAN_p = RAAN_0 + 360 * p / P
+u_(p,s) = u_0 + 360 * s / S + 360 * F * p / N
+p = 0, ..., P-1; s = 0, ..., S-1; F = 0, ..., P-1
 ```
 
-先枚举轨道面数量 `P`、相位因子 `F`，再搜索高度 `h`、整体升交点偏移 `Ω_0` 和整体相位 `u_0`。若比较其他轨道面铺展方式，应作为单独构型族说明，不能混用 Walker-Delta 的定义。
+Enumerate plane count `P` and phase factor `F`, then search altitude `h`, global RAAN offset `RAAN_0`, and global phase `u_0`. Describe alternative plane distributions as separate constellation families instead of mixing their definitions with Walker-Delta.
 
-### 第二步：满足太阳同步约束与不同 N
+### Step 2: Enforce sun-synchronous constraints and support different N
 
-太阳同步倾角应由高度通过 J2 节点进动关系求解，不能在 500–700 km 高度变化时保持任意固定倾角，也不能将高度和倾角完全独立搜索。采用圆轨道关系 `a = R_mean + h`，结合已统一的地球常数求 `i`，并在 STK 验证节点进动。
+Derive inclination from altitude using the J2 nodal precession relationship. Do not keep an arbitrary inclination fixed while changing altitude from 500 to 700 km, or search altitude and inclination independently. Use `a = R_mean + h` for circular orbits, calculate inclination with the common Earth constants, and validate nodal precession in STK.
 
-等星数轨道面先枚举 `N` 的因数。为适应不能方便分解的 `N`，增加自定义不等星数构型：各面先分配 `floor(N/P)` 颗，将余数分配至部分轨道面，并独立设计面内相位。该扩展不直接套用标准 Walker 相位公式，始终检查总数恰好等于输入 `N`。
+For equal-population orbital planes, enumerate factors of `N`. For other counts, support custom unequal-population constellations: assign `floor(N/P)` satellites to each plane, distribute the remainder, and design the phases separately. This extension does not directly inherit the standard Walker phase formula. Always verify that the total satellite count equals `N`.
 
-### 第三步：粗筛与精评结合
+### Step 3: Combine coarse screening with detailed evaluation
 
-1. 用 Python 生成均匀基线和不同 `P / F / h` 的候选；第一版优先做可解释的枚举和小范围搜索。
-2. 用经 STK 校准的 J2 长期摄动近似、地固系转换及条带几何评估做快速筛选。近似模型需体现 J2 对升交点及轨道相位演化的影响，避免仅用二体轨迹代替；先比较少量典型轨迹和访问窗口再启用筛选。
-3. 固定筛选预算，仅将较优候选送入 STK 11 完整验证；记录近似排序与 STK 排序的一致性，避免漏掉潜在优解。
-4. 基础流程稳定后，再考虑差分进化或局部相位扰动。离散的面数、相位因子与连续参数分层处理；多目标算法作为后续选项。
-5. 当均匀构型改进不足时，再引入各面 RAAN 偏移、非均匀面内相位；多高度壳层放在后续阶段，控制变量数量。
+1. Generate uniform baselines and candidates with different `P / F / h` values. Start with interpretable enumeration and bounded searches.
+2. Use an STK-calibrated approximation of J2 secular perturbations, Earth-fixed transformations, and imaging-strip geometry for fast screening. Include the evolution of RAAN and orbital phase; compare representative trajectories and access windows before relying on the approximation.
+3. Fix the screening budget and send promising candidates to STK 11 for detailed validation. Record ranking agreement between the approximation and STK.
+4. After the basic workflow is stable, consider differential evolution or local phase perturbations. Separate discrete choices from continuous parameters; multi-objective methods are a later option.
+5. If uniform designs provide insufficient improvement, introduce per-plane RAAN offsets and nonuniform phases. Defer multiple-altitude shells to control the number of variables.
 
-优化时先检查轨道合法性和区域有效重访能力，再比较性能。固定随机种子、候选数量或运行时长，缓存相同参数的评估结果。STK 自动化初期串行执行，不让多个任务争用同一实例。
+Check orbital validity and regional revisit feasibility before comparing performance. Fix random seeds and candidate or runtime budgets, and cache repeated parameter evaluations. Run early STK automation serially to avoid contention for the same application instance.
 
-## 6. STK 11 建模与 Python 对接
+## 6. STK 11 Modeling and Python Integration
 
-计划按以下顺序打通最小流程：
+The planned modeling workflow is:
 
-1. Python 连接或启动 STK 11，创建统一历元和仿真时段的场景。
-2. 根据输出参数建立卫星，设置 J2000、J2 Perturbation、30 s 传播步长和圆轨道初值。高度转半长轴时按约定的平均半径换算，避免混用软件界面的另一种高度定义。
-3. 对圆轨道固定 `ω = 0`，令初始真近点角 `ν = u`，保留纬度幅角；不将近地点幅角作为优化变量。Python 与 STK 的平均根数口径和初值转换需对齐。
-4. 设置 +Z 对地心、+X 沿轨道前进方向的姿态，并建立矩形推扫传感器；核对视轴、传感器相对本体安装方向及沿迹/交叉迹投影。
-5. 创建全球及长三角 Coverage Definition，资产使用卫星上的相机 Sensor，保证计算包含视场约束。导出网格坐标与访问区间，用 Python 按题目口径复算指标。
-6. 保存工程和相关卫星、传感器、区域等文件，关闭后重新打开，检查数据完整性及可复现性。
+1. Connect to or start STK 11 from Python and create a scenario with the common epoch and time interval.
+2. Create satellites from the exported parameters. Set J2000, J2 Perturbation, a 30 s propagation step, and circular initial orbits. Convert altitude to semimajor axis using the agreed mean Earth radius.
+3. For circular orbits, fix argument of perigee to zero and set initial true anomaly equal to `u`. Preserve argument of latitude, and align the orbital element conventions and initial-state mapping between Python and STK.
+4. Configure the specified attitude and rectangular pushbroom sensor. Verify boresight, sensor installation, and along-track/cross-track ground projections.
+5. Create global and regional Coverage Definitions using the camera Sensors as assets. Export grid coordinates and access intervals for independent metric calculation in Python.
+6. Save the project and associated satellite, sensor, and region files. Close and reopen it to check completeness and reproducibility.
 
-矩形传感器的 `HorizontalHalfAngle` 与 `VerticalHalfAngle` 分别对应传感器 XZ 与 YZ 平面的半角，方向取决于安装姿态。[STK 11.4 矩形传感器接口](https://help.agi.com/stkdevkit/11.4.0/Content/DocX/STKObjects~IAgSnRectangularPattern.html)
+For rectangular sensors, `HorizontalHalfAngle` and `VerticalHalfAngle` correspond to the sensor XZ and YZ planes; their ground directions depend on installation attitude. See the [STK 11.4 rectangular sensor interface](https://help.agi.com/stkdevkit/11.4.0/Content/DocX/STKObjects~IAgSnRectangularPattern.html).
 
-**时间精度需要单独验证。** 沿迹视场很窄，单点访问可能短于 1 s。30 s 轨道传播步长、10 s / 1 s 分析设置、报表输出间隔与访问事件求解精度是不同设置。不能只在每 1 s 判断一次是否落入视场并假定不会漏检；需检查 STK 11 的访问搜索、插值和事件收敛设置，用代表性访问做步长收敛比较。内部精度试验与题目规定的最终设置分别保存；若统一设置存在漏检风险，向主办方确认。[官方访问计算设置说明](https://help.agi.com/stk/content/stk/CompSettings.htm)
+**Time accuracy requires separate validation.** A narrow along-track field of view can produce accesses shorter than one second. Propagation step, analysis time settings, report sampling, and event-solver accuracy are distinct settings. Testing visibility only once per second can miss events. Check STK access search, interpolation, and convergence settings, and perform convergence comparisons on representative accesses. Keep internal precision experiments separate from the required final configuration. See the [STK access computation settings](https://help.agi.com/stk/content/stk/CompSettings.htm).
 
-## 7. 大致实施计划
+## 7. Original Implementation Roadmap
 
-按约 **6 周**安排，不绑定具体日期；团队按实际截止时间压缩或调整。前两周优先实现“28 星可生成、可导入、可评估”。
+The original plan allocated approximately six weeks without fixed calendar dates. This is a planning reference, not a statement of current completion or a remaining-time estimate. The first two weeks prioritized a 28-satellite constellation that could be generated, imported, and evaluated.
 
-| 阶段 | 时间建议 | 主要工作 | 阶段验收 |
+| Stage | Suggested time | Main work | Acceptance target |
 | --- | --- | --- | --- |
-| 需求与环境核对 | 第 1 周 | 确认边界、视场、时间与评分口径；检查 STK 许可证；Python 建立 1 星场景并导出一次访问 | 环境记录、待确认清单、1 星自动化连通 |
-| 基线与参数接口 | 第 2 周 | 生成 28 星 7×4 基线；实现输入校验和轨道表导出；导入 STK | 恰好 28 行合法参数、可重开工程、首次指标统计 |
-| 统一评估流程 | 第 3 周 | 全球/长三角网格、访问区间合并、四项指标、时间精度检查；小样本核对 Python 与 STK | 相同输入可复现；统计与抽查访问一致 |
-| 构型搜索 | 第 4 周 | 枚举 P/F、高度与整体相位；粗筛后 STK 精评；必要时局部扰动 | 基线与候选对比表，报告四项指标的收益和退化 |
-| 多规模与稳健性 | 第 5 周 | 测试示例 30/60/100 星及非整除规模；检查 N=2、质数规模和非法输入；重复随机种子实验 | 不同 N 自动输出合法构型，明确耗时及适用范围 |
-| 工程与文档交付 | 第 6 周 | 选定 28 星方案，完成全精度复算、图表、算法说明和独立运行检查 | 完整 STK 工程、结果数据、运行说明和演示材料 |
+| Requirements and environment | Week 1 | Confirm boundaries, sensor angles, time and scoring conventions; check licensing; export one satellite access | Environment record, open questions, and a working automation connection |
+| Baseline and parameter interface | Week 2 | Generate the 28-satellite 7-by-4 baseline; validate input and export orbits; import into STK | Exactly 28 valid rows, a reopenable project, and initial statistics |
+| Common evaluation workflow | Week 3 | Build grids, merge accesses, calculate four metrics, and check timing accuracy | Reproducible results and agreement with sampled STK accesses |
+| Constellation search | Week 4 | Enumerate planes, phase, altitude, and global offsets; screen and validate candidates | Baseline comparisons showing gains and tradeoffs |
+| Multiple counts and robustness | Week 5 | Test 30/60/100, non-divisible counts, boundaries, invalid inputs, and repeated seeds | Valid output for different N, with documented cost and limits |
+| Engineering and documentation | Week 6 | Select a 28-satellite design, recompute final metrics, and prepare independent execution | Complete STK project, results, instructions, and demonstration material |
 
-可按工作量分为算法、STK 仿真、数据与文档三项职责，由团队自行分配。每周保留一个可运行版本，避免最后集中联调。
+Work may be divided among algorithms, STK simulation, and data/documentation. Keep a runnable version at each stage. If time is limited, prioritize the evaluation workflow and bounded search before nonuniform constellations, multiple shells, or complex multi-objective optimization.
 
-如果周期不足，优先完成第 1–3 周流程，再进行小预算枚举搜索和工程交付；非均匀构型、多壳层和复杂多目标优化可延后。
+## 8. Repository Layout and Interfaces
 
-## 8. 计划目录与接口
-
-以下为完整项目的建议目录；第一轮只实现复现说明中列出的最小模块。
+The current repository separates historical research code from the newer published standalone tools:
 
 ```text
-bd-fmb/
-├── README.md
-├── requirements.txt              # 连通验证后锁定的依赖
-├── configs/                      # 固定仿真条件、搜索范围、区域边界
-├── src/
-│   ├── constellation/            # 太阳同步约束、Walker 与自定义构型
-│   ├── evaluation/               # 快速评估、访问合并与指标统计
-│   ├── optimization/             # 枚举搜索及后续优化算法
-│   ├── stk_interface/            # STK 11 导入、运行、导出
-│   └── cli.py                    # 统一入口
-├── tests/                        # 数量、轨道约束、统计边界检查
-├── experiments/                  # 各 N 的配置与运行记录
-├── results/                      # 小体积指标、图表和参数表
-├── stk/                          # 28 星工程及关联文件
-└── docs/                         # 算法说明、环境记录和复现说明
+repository/
+|-- README.md
+|-- requirements-smoke.txt       # Dependencies for the historical smoke environment
+|-- configs/                    # Per-round configurations
+|-- src/                        # Historical implementation and round-specific modules
+|-- tools/                      # Execution, inspection, and export utilities
+|-- tests/                      # Regression and boundary checks
+|-- checkpoints/                # Selected historical candidate snapshots
+|-- docs/                       # Round reports and stage status
+`-- research/
+    |-- SOURCE_MAP.json         # Source identity and provenance
+    |-- round25/program/        # Standalone N-only generator
+    `-- round28/
+        |-- src/                # Offline batch storage and statistics modules
+        `-- checks/             # Published synthetic checks
 ```
 
-开发中的内部轨道表建议字段：
+The internal orbit table uses:
 
 ```text
 sat_id, h_km, i_deg, raan_deg, u_deg
 ```
 
-统一历元、坐标系、地球常数、时间系统和固定偏心率放入伴随配置；角度归一化至 `[0, 360)`（倾角按合法范围校验）。正式接口公布后增加适配，不将内部 CSV 格式当作主办方要求。
+Store the epoch, reference frame, Earth constants, time system, and fixed eccentricity in an accompanying configuration. Normalize periodic angles to `[0, 360)` and validate inclination separately. Add an adapter when the official interface is confirmed; the internal CSV is not an official submission specification.
 
-拟定命令如下，**当前尚不可执行**：
+The original design proposed the following interfaces. **These remain illustrative planning examples, not the published general-purpose entry points:**
 
 ```powershell
-# 根据 N 独立生成参数；生成模式可采用固定规则或已确定的参数策略
+# Planned general-purpose generation interface.
 python -m src.cli generate --n 28 --output results/n28/orbits.csv
 
-# 使用 STK 11 验证某一份轨道参数
+# Planned STK evaluation interface.
 python -m src.cli evaluate --input results/n28/orbits.csv --engine stk11
 
-# 开发阶段搜索更优参数，并保存预算、随机种子和配置
+# Planned optimization interface.
 python -m src.cli optimize --n 28 --seed 42 --output results/n28_search
 ```
 
-## 9. 验证与最终交付
+Use the R25 command near the top of this README for the released N-only generator. The legacy `src.cli` retains its historical behavior.
 
-每次方案比较固定 `N`、评价点集、仿真时段、载荷、传播模型和计算精度，至少保存：配置、轨道参数、随机种子、运行耗时、软件版本、四项原始指标和异常状态。近似评估与 STK 结果分开标注。
+## 9. Validation and Final Delivery
 
-结果表建议如下；在获得真实仿真输出后填入，不预填预计提升比例：
+Keep satellite count, point set, simulation period, payload, propagation model, and numerical settings fixed when comparing designs. Save configurations, orbital parameters, random seeds, runtime, software versions, four raw metrics, and exceptional states. Label approximate evaluations separately from native STK results.
 
-| N | 方案 | T90 | T100 | Tavg | Tmax | 有效重访网格占比 | 耗时 | 验证条件 |
+The following is a template for formal results. Populate it only after the required simulations; it does not represent existing validated measurements.
+
+| N | Design | T90 | T100 | Tavg | Tmax | Valid revisit point fraction | Runtime | Conditions |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 28 | 7×4 均匀基线 | 待测 | 待测 | 待测 | 待测 | 待测 | 待测 | STK 11 统一条件 |
-| 28 | 优化候选 | 待测 | 待测 | 待测 | 待测 | 待测 | 待测 | 与基线一致 |
+| 28 | Uniform 7-by-4 baseline | Pending | Pending | Pending | Pending | Pending | Pending | Common STK 11 settings |
+| 28 | Optimized candidate | Pending | Pending | Pending | Pending | Pending | Pending | Identical to baseline |
 
-最终交付检查：
+Final-delivery acceptance targets:
 
-- [ ] 源代码与依赖说明齐全；独立生成程序可接收不同 N，不依赖手工编辑每颗卫星。
-- [ ] 参数数量、轨道范围、太阳同步条件、单位与历元通过检查。
-- [ ] 28 星 STK 工程和所有关联文件完整，换目录后可以重新打开与计算。
-- [ ] 全球累计覆盖曲线、T90/T100、区域重访分布和 Tavg/Tmax 有原始数据支撑。
-- [ ] 至少完成 28 星工程验证，以及题目示例的 30/60/100 星规模检查；如正式工况变化则同步调整。
-- [ ] 基线与优化方案采用相同条件，完整报告取舍与未达标指标。
-- [ ] 算法说明包含变量定义、轨道面与相位设计、优化流程及理论参数到 STK 参数的映射。
-- [ ] 大体积临时缓存不进入普通提交；必要的大工程文件由团队按仓库限制选择 Git LFS 或其他交付方式。
+- [ ] Complete source code and dependency instructions; the generator accepts different N without manual per-satellite editing.
+- [ ] Valid satellite counts, orbital ranges, sun-synchronous constraints, units, and epoch.
+- [ ] A complete 28-satellite STK project and all associated files, verified after relocation and recomputation.
+- [ ] Global cumulative coverage curves, T90/T100, regional revisit distributions, and Tavg/Tmax backed by raw data.
+- [ ] Required engineering and scale checks, updated to match the official evaluation cases.
+- [ ] Baseline and candidate comparisons under identical conditions, including tradeoffs and unmet targets.
+- [ ] Algorithm documentation covering variable definitions, plane and phase design, optimization, and the mapping to STK parameters.
+- [ ] Large temporary caches excluded from ordinary commits; required large project files delivered using an appropriate repository or artifact mechanism.
 
-## 10. 团队自行提交修改
+These are final acceptance targets. The R25 generator and R26-R28 diagnostic results do not close the full checklist. Current status remains:
 
-阶段提交包含源码、配置、测试和执行说明。原始数据、work缓存、_local交接文件、运行产物及STK工程不进入普通Git提交。运行和验收状态以对应交付证据为准。Git暂存、提交与推送由团队手动执行。
+```text
+full_N28_admission = CLOSED
+formal_full_grid_validation = NOT_RUN
+official_readiness = UNRESOLVED
+official_score = null
+```
 
-使用 GitHub Desktop：选择 **File → Add local repository**，添加当前 `bd-fmb` 文件夹，检查 README 差异，填写提交说明，再自行 Commit 和 Push。
+R28 reduced the D workload's Store file count from 6,242 to 101, approximately 61.8 times fewer files. This does not establish an equivalent runtime improvement; the new D run did not demonstrate a shorter total runtime. Query plans and snapshots still have materialization costs. The initial timing sample was taken out of the required order; a disclosed 120-second budget deduction is not a proven upper bound on unmeasured preparation time.
 
-如使用 Git，在仓库目录检查修改后执行：
+The published subset does not contain the complete native STK collector, full engineering project, machine resources, or raw native experimental data. Passing the public synthetic checks does not reproduce the native experiments or validate official performance.
+
+## 10. Version Control and Manual Submission
+
+Stage releases include source code, configurations, tests, and execution instructions. Raw data, work caches, local handoff files, generated run artifacts, and STK projects are excluded from ordinary Git commits. Execution and acceptance claims must refer to the corresponding evidence.
+
+Review, stage, commit, and push changes manually. In GitHub Desktop, use **File -> Add local repository**, select the local project folder, inspect the README diff, and enter a commit message before committing and pushing.
+
+For a README-only change, the equivalent Git commands are:
 
 ```powershell
 git diff -- README.md
 git add README.md
-git commit -m "docs: add constellation optimization plan for STK 11 and Python"
+git commit -m "docs: translate project README into English"
 git push origin main
 ```
 
-以上提交与推送命令供团队手动执行。仓库地址：[zindigo321/bd-fmb](https://github.com/zindigo321/bd-fmb)。
+These commands are provided for manual use; review the current branch and changes before running them.
+
+Repository: [zindigo321/fxyd6](https://github.com/zindigo321/fxyd6).
